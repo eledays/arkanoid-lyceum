@@ -1,5 +1,5 @@
 from app import screen, clock, current_screen
-from app.objects import Button
+from app.objects import Button, Platform, Ball, Block
 from config import Config
 
 import pygame
@@ -60,6 +60,31 @@ class Main:
     def __init__(self):
         global screen
         screen = pygame.display.set_mode((Config.SCREEN_W, Config.SCREEN_H))
+        
+        # Загрузка игровых ресурсов
+        self.bg = pygame.Surface((Config.SCREEN_W, Config.SCREEN_H))
+        self.bg.fill((50, 50, 50))  # Тёмно-серый фон
+        
+        # Создание игровых объектов
+        self.platform = Platform(Config.SCREEN_W // 2, Config.SCREEN_H - 50)
+        self.ball = Ball(Config.SCREEN_W // 2, Config.SCREEN_H - 70)
+        self.blocks = []
+        
+        # Создание начального расположения блоков
+        self.create_blocks()
+        
+        # Состояние игры
+        self.game_over = False
+        self.score = 0
+        self.lives = 3
+
+    def create_blocks(self):
+        # Создание сетки блоков
+        for row in range(5):
+            for col in range(10):
+                x = col * (Config.BLOCK_WIDTH + 2)
+                y = row * (Config.BLOCK_HEIGHT + 2) + 10
+                self.blocks.append(Block(x, y))
 
     def run(self):
         while True:
@@ -67,9 +92,44 @@ class Main:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
+                    
+            if not self.game_over:
+                # Обновление игровых объектов
+                self.platform.update()
+                self.ball.update()
+                
+                # Проверка столкновений
+                self.ball.check_collision(self.platform)
+                
+                for block in self.blocks[:]:
+                    if self.ball.check_collision(block):
+                        self.blocks.remove(block)
+                        self.score += 10
+                        
+                # Проверка условий победы/поражения        
+                if len(self.blocks) == 0:
+                    self.game_over = True
+                    
+                if self.ball.rect.bottom > Config.SCREEN_H:
+                    self.lives -= 1
+                    if self.lives <= 0:
+                        self.game_over = True
+                    else:
+                        self.ball.reset()
+                
+            # Отрисовка всех элементов
+            screen.blit(self.bg, (0, 0))
+            self.platform.draw(screen)
+            self.ball.draw(screen)
+            
+            for block in self.blocks:
+                block.draw(screen)
+                
+            # Отображение очков и жизней
+            # TODO: Добавить отображение очков и жизней
 
             pygame.display.update()
-            clock.tick(1000 / Config.FPS)
+            clock.tick(Config.FPS)
 
 
 class Levels:
