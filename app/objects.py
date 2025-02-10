@@ -1,8 +1,8 @@
 from app import screen
 from config import Config
-
 import pygame
 import math
+import json
 
 
 class Button:
@@ -10,7 +10,7 @@ class Button:
     Класс для создания кнопок в игре
     """
 
-    def __init__(self, x, y, width, height, surface, onclick):
+    def __init__(self, x, y, width, height, surface, onclick, *args):
         # Координаты и размеры кнопки
         self.x = x
         self.y = y
@@ -20,6 +20,7 @@ class Button:
         self.surface = surface
         # Функция обработки нажатия
         self.onclick = onclick
+        self.args = args
 
         # Создаем прямоугольник для обработки коллизий
         self.buttonRect = pygame.Rect(self.x, self.y, self.width, self.height)
@@ -31,7 +32,7 @@ class Button:
         # Проверяем нажатие на кнопку
         if self.buttonRect.collidepoint(mousePos):
             if pygame.mouse.get_pressed(num_buttons=3)[0]:
-                self.onclick()
+                self.onclick(*self.args)
 
     def draw(self, screen):
         # Отрисовка кнопки
@@ -44,6 +45,8 @@ class Platform:
     """
 
     def __init__(self, x, y, width=Config.PLATFORM_WIDTH, height=Config.PLATFORM_HEIGHT):
+        with open('app/settings.json', 'r') as file:
+            settings = json.load(file)
         # Размеры платформы
         self.width = width
         self.height = height
@@ -55,7 +58,7 @@ class Platform:
         # Прямоугольник для коллизий
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
         # Цвет платформы
-        self.color = (200, 200, 200)
+        self.color = settings['platform_color']
 
     def update(self):
         # Получаем нажатые клавиши
@@ -114,6 +117,8 @@ class Ball:
     """
 
     def __init__(self, x, y):
+        with open('app/settings.json', 'r') as file:
+            settings = json.load(file)
 
         self.radius = Config.BALL_RADIUS
         self.x = x
@@ -127,7 +132,7 @@ class Ball:
                                 self.radius * 2, self.radius * 2)
 
         # Цвет мяча
-        self.color = (255, 255, 255)
+        self.color = settings['ball_color']
 
         self.speed_up = False
 
